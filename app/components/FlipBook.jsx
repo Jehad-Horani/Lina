@@ -148,10 +148,8 @@ export default function FlipBook() {
   const [currentLoveMsg, setCurrentLoveMsg] = useState(loveMessages[0]);
   const [msgKey, setMsgKey] = useState(0);
 
-  // حالة المتصفح (موبايل أو لا)
   const [isMobile, setIsMobile] = useState(false);
 
-  // نراقب حجم الشاشة عند تحميل الصفحة وأثناء تغيير الحجم
   useEffect(() => {
     function checkMobile() {
       setIsMobile(window.innerWidth < 768);
@@ -161,14 +159,12 @@ export default function FlipBook() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  // رسالة حب عشوائية تتغير مع تغير الصفحة
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * loveMessages.length);
     setCurrentLoveMsg(loveMessages[randomIndex]);
     setMsgKey((k) => k + 1);
   }, [spreadIndex]);
 
-  // دوال التنقل
   const nextSpread = () => {
     if (isMobile) {
       if (spreadIndex < spreads.length * 2 - 1) {
@@ -197,7 +193,7 @@ export default function FlipBook() {
     }
   };
 
-  // تحديد الصفحات المعروضة بناءً على الجهاز
+  // هنا نرجع الصفحات حسب الجهاز
   const getCurrentPages = () => {
     if (isMobile) {
       const pageNumber = spreadIndex;
@@ -210,115 +206,111 @@ export default function FlipBook() {
   };
 
   const pages = getCurrentPages();
-    return (
-        <div className="flex flex-col items-center py-10 relative bg-yellow-50 min-h-screen">
-            {/* تأثير سقوط القلوب */}
-            <FallingHearts />
 
-            {/* الدفتر */}
-          <div className="relative w-full max-w-[900px] aspect-[16/10] max-md:h-[700px] h-[600px] perspective">
-                <div className="absolute inset-0 bg-yellow-100 rounded-lg shadow-2xl border-4 border-yellow-200" />
+  return (
+    <div className="flex flex-col items-center py-10 relative bg-yellow-50 min-h-screen">
+      <FallingHearts />
 
-                <AnimatePresence mode="wait" custom={direction}>
-                    <motion.div
-                        key={spreadIndex}
-                        custom={direction}
-                        initial={{ rotateY: direction === 1 ? 90 : -90, opacity: 0 }}
-                        animate={{ rotateY: 0, opacity: 1 }}
-                        exit={{ rotateY: direction === 1 ? -90 : 90, opacity: 0 }}
-                        transition={{ duration: 0.9 }}
-                        className="absolute w-full h-full flex rounded-lg overflow-hidden"
-                        style={{ backfaceVisibility: "hidden" }}
-                    >
-                        {/* الصفحة اليسار */}
-                        <Page
-                            image={spreads[spreadIndex].left.image}
-                            text={spreads[spreadIndex].left.text}
-                            side="left"
-                        />
+      <div className="relative w-full max-w-[900px] aspect-[16/10] max-md:h-[700px] h-[600px] perspective">
+        <div className="absolute inset-0 bg-yellow-100 rounded-lg shadow-2xl border-4 border-yellow-200" />
 
-                        {/* الصفحة اليمين */}
-                        <Page
-                            image={spreads[spreadIndex].right.image}
-                            text={spreads[spreadIndex].right.text}
-                            side="right"
-                        />
-                    </motion.div>
-                </AnimatePresence>
-            </div>
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={spreadIndex}
+            custom={direction}
+            initial={{ rotateY: direction === 1 ? 90 : -90, opacity: 0 }}
+            animate={{ rotateY: 0, opacity: 1 }}
+            exit={{ rotateY: direction === 1 ? -90 : 90, opacity: 0 }}
+            transition={{ duration: 0.9 }}
+            className={`absolute w-full h-full flex rounded-lg overflow-hidden ${
+              isMobile ? "flex-col" : ""
+            }`}
+            style={{ backfaceVisibility: "hidden" }}
+          >
+            {pages.map((page, i) => (
+              <Page
+                key={i}
+                image={page.image}
+                text={page.text}
+                side={isMobile ? null : i === 0 ? "left" : "right"}
+                isMobile={isMobile}
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
-            {/* رسالة حب عشوائية تظهر فوق الدفتر */}
-            <div className="mt-6 w-[900px] h-6 flex justify-center items-center text-pink-700 text-xl font-semibold relative z-30">
-                <AnimatePresence mode="wait">
-                    <motion.p
-                        key={msgKey}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.6 }}
-                        className="select-none"
-                    >
-                        {currentLoveMsg}
-                    </motion.p>
-                </AnimatePresence>
-            </div>
+      <div
+        className={`mt-6 ${
+          isMobile ? "w-full px-4" : "w-[900px]"
+        } h-6 flex justify-center items-center text-pink-700 text-xl font-semibold relative z-30`}
+      >
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={msgKey}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.6 }}
+            className="select-none text-center"
+          >
+            {currentLoveMsg}
+          </motion.p>
+        </AnimatePresence>
+      </div>
 
-            {/* أزرار التحكم */}
-            <div className="flex gap-4 mt-4">
-                <button
-                    onClick={prevSpread}
-                    disabled={spreadIndex === 0}
-                    className="bg-pink-500 cursor-pointer text-white px-3 py-1 md:px-4 md:py-1 rounded-lg shadow hover:bg-pink-600 disabled:opacity-50"
-                >
-                    ⬅ السابق
-                </button>
-                <button
-                    onClick={nextSpread}
-                    disabled={
-                        isMobile
-                            ? spreadIndex === spreads.length * 2 - 1
-                            : spreadIndex === spreads.length - 1
-                    }
-                    className="bg-pink-500 cursor-pointer text-white px-3 py-1 md:px-4 md:py-2 rounded-lg shadow hover:bg-pink-600 disabled:opacity-50"
-                >
-                    التالي ➡
-                </button>
+      <div className="flex gap-4 mt-4">
+        <button
+          onClick={prevSpread}
+          disabled={spreadIndex === 0}
+          className="bg-pink-500 cursor-pointer text-white px-3 py-1 md:px-4 md:py-1 rounded-lg shadow hover:bg-pink-600 disabled:opacity-50"
+        >
+          ⬅ السابق
+        </button>
+        <button
+          onClick={nextSpread}
+          disabled={
+            isMobile
+              ? spreadIndex === spreads.length * 2 - 1
+              : spreadIndex === spreads.length - 1
+          }
+          className="bg-pink-500 cursor-pointer text-white px-3 py-1 md:px-4 md:py-2 rounded-lg shadow hover:bg-pink-600 disabled:opacity-50"
+        >
+          التالي ➡
+        </button>
+      </div>
 
-
-            </div>
-                 <Link href={"/"} className="text-black p-5 text-lg border-2 border-amber-300 bg-blue-500 hover:scale-105 m-2 rounded-3xl "> ⬅ رجوع للصفحة الرئيسية بس هترجعي تعيدي البازيل ههه </Link>
-        </div>
-    );
+      <Link
+        href={"/"}
+        className="text-black p-5 text-lg border-2 border-amber-300 bg-blue-500 hover:scale-105 m-2 rounded-3xl"
+      >
+        ⬅ رجوع للصفحة الرئيسية بس هترجعي تعيدي البازيل ههه
+      </Link>
+    </div>
+  );
 }
 
-
 function Page({ image, text, side, isMobile }) {
-    return (
-        <div
-            className={`${isMobile ? "w-full" : "w-1/2"
-                } h-full flex flex-col ${!isMobile && side === "left" ? "border-r border-gray-400" : ""
-                }`}
-            style={{
-                backgroundImage: "url('/paper-texture.png')",
-                backgroundSize: "cover"
-            }}
-        >
-
-            <div className="p-2 md:p-4 flex flex-col items-center h-full">
-                {/* صورة */}
-                <div className="border-4 border-pink-400 rounded-xl overflow-hidden shadow-lg mb-3  h-[250px] md:h-[300px]">
-                    <img
-                        src={image}
-                        alt="page"
-                        className="w-full h-full object-contain"
-                    />
-                </div>
-                {/* نص */}
-                <div className=" bg-opacity-10  max-md:text-2xl p-2 md:p-3 text-pink-700 font-medium text-base md:text-lg leading-relaxed rounded-lg shadow-inner overflow-y-auto flex-1 w-[90%] whitespace-pre-line">
-                    {text}
-                </div>
-
-            </div>
+  return (
+    <div
+      className={`${
+        isMobile ? "w-full" : "w-1/2"
+      } h-full flex flex-col ${
+        !isMobile && side === "left" ? "border-r border-gray-400" : ""
+      }`}
+      style={{
+        backgroundImage: "url('/paper-texture.png')",
+        backgroundSize: "cover",
+      }}
+    >
+      <div className="p-2 md:p-4 flex flex-col items-center h-full">
+        <div className="border-4 border-pink-400 rounded-xl overflow-hidden shadow-lg mb-3 h-[250px] md:h-[300px]">
+          <img src={image} alt="page" className="w-full h-full object-contain" />
         </div>
-    );
+        <div className="bg-opacity-10 max-md:text-2xl p-2 md:p-3 text-pink-700 font-medium text-base md:text-lg leading-relaxed rounded-lg shadow-inner overflow-y-auto flex-1 w-[90%] whitespace-pre-line text-center md:text-right">
+          {text}
+        </div>
+      </div>
+    </div>
+  );
 }
